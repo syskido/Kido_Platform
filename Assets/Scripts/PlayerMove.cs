@@ -18,7 +18,7 @@ public class PlayerMove : MonoBehaviour
     private void Update()
     {
         //Jump
-        if (Input.GetButtonDown("Jump"))
+        if (Input.GetButton("Jump"))
         {
             rigid.AddForce(Vector2.up * jumpPower, ForceMode2D.Impulse);
             animator.SetBool("isJumping", true);
@@ -66,5 +66,48 @@ public class PlayerMove : MonoBehaviour
             if(rayHit.distance < 0.5f)
                 animator.SetBool("isJumping", false);
         }
+    }
+
+    void OnCollisionEnter2D(Collision2D collision)
+    {
+        if (collision.gameObject.tag == "Enemy") {
+            //Attack
+            if(rigid.velocity.y < 0 && transform.position.y > collision.transform.position.y) {
+                OnAttack(collision.transform);            
+            }
+            else //Damaged
+                OnDamaged(collision.transform.position);
+        }       
+    }
+
+    void OnAttack(Transform enemy)
+    {
+        // Point
+
+        // Enemy Die
+        EnemyMove enemyMove = enemy.GetComponent<EnemyMove>();
+        enemyMove.OnDamaged();
+    }
+
+    void OnDamaged(Vector2 targetPos)
+    {
+        // Chang Layer (Immortal Active)
+        gameObject.layer = 11;
+
+        // View Alpha
+        spriteRenderer.color = new Color(1, 1, 1, 0.4f);
+
+        // Reaction Force
+        int dirc = transform.position.x - targetPos.x > 0 ? 1 : -1;
+        rigid.AddForce(new Vector2(dirc, 1)*20 ,ForceMode2D.Impulse);
+
+        Invoke("OffDamaged", 1);        
+    }
+
+    void OffDamaged()
+    {
+        gameObject.layer = 10;
+
+        spriteRenderer.color = new Color(1, 1, 1, 1);
     }
 }
