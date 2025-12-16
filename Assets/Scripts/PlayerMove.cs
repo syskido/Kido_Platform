@@ -1,12 +1,14 @@
 using UnityEngine;
 
 public class PlayerMove : MonoBehaviour
-{   
+{
+    public GameManager Manager;
     public float maxSpeed;
     public float jumpPower;
     Rigidbody2D rigid;
     SpriteRenderer spriteRenderer;
     Animator animator;
+    private object gameManager;
 
     void Awake()
     {
@@ -80,9 +82,26 @@ public class PlayerMove : MonoBehaviour
         }       
     }
 
+    void OnTriggerEnter2D(Collider2D collision)
+    {
+        if (collision.gameObject.tag == "Item") {
+            // Point
+            gameManager.stagePoint += 100;
+            //Deactive Item
+            collision.gameObject.SetActive(false);
+        }
+        else if (collision.gameObject.tag == "Finish") {
+            //  Next Stage
+            collision.gameObject.SetActive(false); 
+        }
+    }
+
     void OnAttack(Transform enemy)
     {
         // Point
+
+        //Reaction Force
+        rigid.AddForce(Vector2.up * 5, ForceMode2D.Impulse);
 
         // Enemy Die
         EnemyMove enemyMove = enemy.GetComponent<EnemyMove>();
