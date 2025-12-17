@@ -6,6 +6,7 @@ public class EnemyMove : MonoBehaviour
     Animator animator;
     SpriteRenderer spriteRenderer;
     BoxCollider2D boxCollider;
+    
 
     public int nextMove;
 

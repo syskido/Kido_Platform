@@ -1,21 +1,23 @@
+using System;
 using UnityEngine;
 
 public class PlayerMove : MonoBehaviour
 {
-    public GameManager Manager;
+    public GameManager gameManager;
     public float maxSpeed;
     public float jumpPower;
     Rigidbody2D rigid;
+    BoxCollider2D boxCollider;
     SpriteRenderer spriteRenderer;
     Animator animator;
-    private object gameManager;
+    
 
     void Awake()
     {
         rigid = GetComponent<Rigidbody2D>();
         spriteRenderer = GetComponent<SpriteRenderer>();
         animator = GetComponent<Animator>();
-    }
+            }
 
     private void Update()
     {
@@ -80,28 +82,39 @@ public class PlayerMove : MonoBehaviour
             else //Damaged
                 OnDamaged(collision.transform.position);
         }       
-    }
+    }    
 
     void OnTriggerEnter2D(Collider2D collision)
     {
         if (collision.gameObject.tag == "Item") {
-            // Point
-            gameManager.stagePoint += 100;
+            //Point
+            bool isBronze = collision.gameObject.name.Contains("Bronze");
+            bool isSilver = collision.gameObject.name.Contains("Silver");
+            bool isGold = collision.gameObject.name.Contains("Gold");
+
+            if(isBronze)
+                gameManager.stagePoint += 50;
+            else if(isSilver)
+                gameManager.stagePoint += 100;
+            else if (isGold)
+                gameManager.stagePoint += 300;
+
             //Deactive Item
             collision.gameObject.SetActive(false);
         }
         else if (collision.gameObject.tag == "Finish") {
             //  Next Stage
-            collision.gameObject.SetActive(false); 
+            gameManager.NextStage();
         }
     }
 
     void OnAttack(Transform enemy)
     {
         // Point
+        gameManager.stagePoint += 100;
 
         //Reaction Force
-        rigid.AddForce(Vector2.up * 5, ForceMode2D.Impulse);
+        rigid.AddForce(Vector2.up * 10, ForceMode2D.Impulse);
 
         // Enemy Die
         EnemyMove enemyMove = enemy.GetComponent<EnemyMove>();
@@ -110,6 +123,9 @@ public class PlayerMove : MonoBehaviour
 
     void OnDamaged(Vector2 targetPos)
     {
+        //Health Down
+        gameManager.HealthDown();
+
         // Chang Layer (Immortal Active)
         gameObject.layer = 11;
 
@@ -118,9 +134,10 @@ public class PlayerMove : MonoBehaviour
 
         // Reaction Force
         int dirc = transform.position.x - targetPos.x > 0 ? 1 : -1;
-        rigid.AddForce(new Vector2(dirc, 1)*20 ,ForceMode2D.Impulse);
+        rigid.AddForce(new Vector2(dirc, 1)*20, ForceMode2D.Impulse);
 
-        Invoke("OffDamaged", 1);        
+        //Animation
+        Invoke("OffDamaged", 3);        
     }
 
     void OffDamaged()
@@ -128,5 +145,20 @@ public class PlayerMove : MonoBehaviour
         gameObject.layer = 10;
 
         spriteRenderer.color = new Color(1, 1, 1, 1);
+    }
+
+    public void OnDie()
+    {
+        //Sprite Alpha
+        spriteRenderer.color = new Color(1, 1, 1, 0.4f);
+
+        //Sprite Flip Y
+        spriteRenderer.flipY = true;
+
+        //Collider Disable
+        boxCollider.enabled = false;
+
+        //Die Effect Jump
+        rigid.AddForce(Vector2.up * 15, ForceMode2D.Impulse);
     }
 }
